@@ -34,19 +34,18 @@ fn run_steps(
             let xi = x[i];
             let yi = y[i];
             let zi = z[i];
+
             for j in 0..n {
-                if i != j {
-                    let dx = x[j] - xi;
-                    let dy = y[j] - yi;
-                    let dz = z[j] - zi;
-                    let dist2 = dx * dx + dy * dy + dz * dz + softening;
-                    let inv = 1.0 / dist2.sqrt();
-                    let inv3 = inv * inv * inv;
-                    let s = m[j] * inv3;
-                    fx += dx * s;
-                    fy += dy * s;
-                    fz += dz * s;
-                }
+                let dx = x[j] - xi;
+                let dy = y[j] - yi;
+                let dz = z[j] - zi;
+                let dist2 = dx * dx + dy * dy + dz * dz + softening;
+                let inv = 1.0 / dist2.sqrt();
+                let inv3 = inv * inv * inv;
+                let s = m[j] * inv3;
+                fx += dx * s;
+                fy += dy * s;
+                fz += dz * s;
             }
             vx[i] += dt * fx;
             vy[i] += dt * fy;
