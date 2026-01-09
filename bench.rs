@@ -26,30 +26,54 @@ fn run_steps(
     vz: &mut [f64],
     m: &[f64],
 ) {
+    let mut fx_buf = vec![0.0; n];
+    let mut fy_buf = vec![0.0; n];
+    let mut fz_buf = vec![0.0; n];
+
     for _ in 0..count {
+        fx_buf.fill(0.0);
+        fy_buf.fill(0.0);
+        fz_buf.fill(0.0);
+
         for i in 0..n {
-            let mut fx = 0.0f64;
-            let mut fy = 0.0f64;
-            let mut fz = 0.0f64;
             let xi = x[i];
             let yi = y[i];
             let zi = z[i];
+            let mi = m[i];
 
-            for j in 0..n {
+            let mut fxi = fx_buf[i];
+            let mut fyi = fy_buf[i];
+            let mut fzi = fz_buf[i];
+
+            for j in (i + 1)..n {
                 let dx = x[j] - xi;
                 let dy = y[j] - yi;
                 let dz = z[j] - zi;
                 let dist2 = dx * dx + dy * dy + dz * dz + softening;
                 let inv = 1.0 / dist2.sqrt();
                 let inv3 = inv * inv * inv;
-                let s = m[j] * inv3;
-                fx += dx * s;
-                fy += dy * s;
-                fz += dz * s;
+                
+                let s_i = m[j] * inv3;
+                let s_j = mi * inv3;
+
+                fxi += dx * s_i;
+                fyi += dy * s_i;
+                fzi += dz * s_i;
+
+                fx_buf[j] -= dx * s_j;
+                fy_buf[j] -= dy * s_j;
+                fz_buf[j] -= dz * s_j;
             }
-            vx[i] += dt * fx;
-            vy[i] += dt * fy;
-            vz[i] += dt * fz;
+            
+            fx_buf[i] = fxi;
+            fy_buf[i] = fyi;
+            fz_buf[i] = fzi;
+        }
+
+        for i in 0..n {
+            vx[i] += dt * fx_buf[i];
+            vy[i] += dt * fy_buf[i];
+            vz[i] += dt * fz_buf[i];
         }
 
         for i in 0..n {

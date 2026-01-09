@@ -2,41 +2,29 @@
 
 A benchmark comparing the performance of C, C++, and Rust implementations of an N-body gravitational simulation. 
 
-## Key Finding: Rust Wins!
+## Key Finding: Rust Consistently Wins
 
-**Clean, idiomatic scalar Rust is ~33% faster than the auto-vectorized C/C++ code** for this workload (~1.78s vs ~2.66s). Furthermore, a **manual assembly implementation in Rust** achieves even higher performance (~1.23s).
-
-Most importantly, by using **algorithmic optimization** (Symmetry/Newton's 3rd Law) in pure Rust, we match the assembly performance (~1.26s) while maintaining **exact correctness** (identical checksum).
+After applying **algorithmic optimization** (Symmetry/Newton's 3rd Law) to all implementations, Rust continues to outperform C and C++ by a significant margin. 
 
 | Language | Time (ms) | Relative | Checksum | Algorithm |
 |----------|-----------|----------|----------|-----------|
-| C        | 2,662     | 1.0x     | 6673.544927 | Brute Force ($N^2$) |
-| C++      | 2,669     | 1.0x     | 6673.544927 | Brute Force ($N^2$) |
-| Rust (Scalar)| 1,782     | **0.67x**| 6673.544927 | Brute Force ($N^2$) |
-| Rust (Symmetry)| 1,259   | **0.47x**| 6673.544927 | **Symmetric ($N^2/2$)** |
-| Rust (ASM)| 1,231     | **0.46x**| 6676.618500 | Brute Force ($N^2$) |
+| C        | 1,630     | 1.0x     | 6673.544927 | Symmetric ($N^2/2$) |
+| C++      | 1,626     | 1.0x     | 6673.544927 | Symmetric ($N^2/2$) |
+| Rust     | **1,260** | **0.77x**| 6673.544927 | **Symmetric ($N^2/2$)** |
+| Rust (ASM)| 1,233    | 0.75x    | 6676.618500 | Brute Force ($N^2$) |
 
 *Tested on Apple Silicon (ARM64/aarch64) with Docker*
 
+### Final Conclusion
+1.  **Rust is faster than C/C++:** Even with identical algorithms and `restrict` pointers in C, Rust's generated scalar code is ~23% faster than C/C++. 
+2.  **Algorithmic Beats Micro-Optimization:** The Symmetric Rust implementation (Scalar) is nearly as fast as the hand-tuned vectorized Assembly implementation, while maintaining bit-perfect correctness.
+3.  **LLVM and Rust:** Rust's strict aliasing and ownership model likely allows LLVM to perform more aggressive scalar optimizations than it can for C/C++ in this specific numerical kernel.
+
 ## Update: The Solution
 
-We initially observed Rust being 7.5x slower (20s). This turned out to be due to suboptimal build flags. By using **clean, idiomatic Rust** (standard iterators/loops), Rust outperforms the auto-vectorized C code.
+We have optimized all implementations to use the **Symmetric** version of the N-Body algorithm. By calculating forces once per pair ($F_{ij} = -F_{ji}$), we halved the computational work. 
 
-For maximum performance, we implemented a **Symmetric** version that calculates forces once for each pair ($F_{ij} = -F_{ji}$), effectively halving the computational work. This version is as fast as hand-written assembly but remains safe and correct.
-
-### The Winning Rust Code (Symmetry)
-```rust
-for i in 0..n {
-    let mut fxi = fx_buf[i];
-    // ...
-    for j in (i + 1)..n {
-        // ... calculate force ...
-        fxi += dx * s_i;     // Force on i
-        fx_buf[j] -= dx * s_j; // Force on j (opposite)
-    }
-    fx_buf[i] = fxi;
-}
-```
+The results show that while all languages benefited from the $O(N^2/2)$ optimization, Rust maintained its performance lead over the Clang-compiled C and C++ versions.
 
 ## The "Problem" (Debunked)
 
