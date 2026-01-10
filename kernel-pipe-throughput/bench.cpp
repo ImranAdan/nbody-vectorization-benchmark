@@ -29,7 +29,9 @@ int main() {
         exit(0);
     } else { // Parent: Writer
         close(pipe_fds[0]);
-        std::vector<uint8_t> buffer(BUFFER_SIZE, 0xAA);
+        std::vector<uint8_t> buffer(BUFFER_SIZE);
+        // Standardized buffer initialization (matches C and Rust)
+        for (int i = 0; i < BUFFER_SIZE; i++) buffer[i] = (uint8_t)i;
         auto start = std::chrono::high_resolution_clock::now();
         uint64_t total_sent = 0;
 

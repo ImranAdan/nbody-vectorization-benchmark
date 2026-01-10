@@ -5,3 +5,8 @@ edition = "2021"
 
 [dependencies]
 # No dependencies - raw software implementation for fairness
+
+[profile.release]
+opt-level = 3
+lto = "fat"
+codegen-units = 1

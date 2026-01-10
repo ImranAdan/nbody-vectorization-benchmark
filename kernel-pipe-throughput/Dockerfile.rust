@@ -5,6 +5,7 @@ ENV PATH=/root/.cargo/bin:$PATH
 WORKDIR /bench
 COPY Cargo.toml .
 COPY src ./src
+ENV RUSTFLAGS="-C target-cpu=native"
 RUN cargo build --release
 RUN cp target/release/pipe-bench ./bench
 CMD ["./bench"]

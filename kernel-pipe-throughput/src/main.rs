@@ -35,7 +35,11 @@ fn main() {
             std::process::exit(0);
         } else { // Parent: Writer
             close(pipe_fds[0]);
-            let buffer = vec![0u8; BUFFER_SIZE];
+            // Standardized buffer initialization (matches C and C++)
+            let mut buffer = vec![0u8; BUFFER_SIZE];
+            for i in 0..BUFFER_SIZE {
+                buffer[i] = i as u8;
+            }
             let mut total_sent = 0u64;
 
             let start = Instant::now();

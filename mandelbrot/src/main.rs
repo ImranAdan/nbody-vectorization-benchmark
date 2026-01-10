@@ -49,15 +49,15 @@ fn main() {
     let mut writer = BufWriter::new(file);
     writeln!(writer, "P3\n{} {}\n255", width, height).unwrap();
 
-    for p in pixels {
-        if p == max_iter {
+    for (i, p) in pixels.iter().enumerate() {
+        if *p == max_iter {
             write!(writer, "0 0 0 ").unwrap();
         } else {
-            let color = (p % 256) as u8;
+            let color = (*p % 256) as u8;
             write!(writer, "{} {} 255 ", color, color).unwrap();
         }
-        if (p % 16) == 0 { // Just to keep line lengths reasonable
-             writeln!(writer).unwrap();
+        if i % 16 == 0 { // Just to keep line lengths reasonable (matches C/C++)
+            writeln!(writer).unwrap();
         }
     }
 
