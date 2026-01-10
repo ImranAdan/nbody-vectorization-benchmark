@@ -14,6 +14,11 @@ A multi-threaded fractal generator testing raw arithmetic throughput and paralle
 *   **Key Finding:** Rust (using Rayon) is ~18% faster than C (using OpenMP) and ~2.8x faster than C++ (using std::thread).
 *   **Story:** Demonstrates how modern work-stealing schedulers (Rayon) handle non-uniform computational workloads more efficiently than static partitioning.
 
+### 3. [3D Vertex Transform](./3d-vertex-transform/)
+A high-volume linear algebra benchmark projecting a rotating 250,000-vertex mesh across 100 frames.
+*   **Key Finding:** Rust is **~4.4x faster** than C/C++ (425M vs 95M vertices/sec).
+*   **Story:** Showcases Rust's ability to trigger aggressive auto-vectorization and inlining for mathematical kernels, significantly outperforming Clang-compiled C/C++ even with identical logic.
+
 ## Project Goal
 To provide a fair, containerized environment for assessing the execution efficiency of different programming languages across diverse computational tasks.
 
