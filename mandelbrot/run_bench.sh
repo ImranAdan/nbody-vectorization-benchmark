@@ -25,6 +25,7 @@ run_one() {
 
   for ((i=0; i<runs; i++)); do
     echo "Running $name (run $((i+1))/$runs)..."
+    docker rm -f "${name}-tmp" >/dev/null 2>&1 || true
     out="$(docker run --name "${name}-tmp" "$name")"
     elapsed="$(echo "$out" | awk -F'[= ]' '{for (i=1;i<=NF;i++) if ($i=="elapsed_ms") {print $(i+1); exit}}')"
     throughput="$(echo "$out" | awk -F'[= ]' '{for (i=1;i<=NF;i++) if ($i=="mpixels_per_sec") {print $(i+1); exit}}')"

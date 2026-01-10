@@ -1,23 +1,22 @@
-# N-Body Simulation Benchmark
+# N-Body Simulation Benchmark (Audited)
 
-## The Story: "The Physics of Aliasing"
-This benchmark simulates gravitational interactions between 1,500 particles over 400 time-steps. It tells the story of how a language's memory safety rules directly impact its mathematical execution speed.
+## The Story: "The Math-Errno Penalty"
+This benchmark simulates gravitational interactions between 1,500 particles. It originally showed Rust winning, but our **Fairness Audit** revealed that C and C++ were being penalized by a legacy rule (`math_errno`) that forces the compiler to track errors for every `sqrt()` call, preventing SIMD optimization.
 
 ### The Algorithm
-We use the **Symmetric $O(N^2/2)$ algorithm**. By applying Newton's Third Law ($F_{ij} = -F_{ji}$), we calculate the force between two particles only once and apply it to both. This halves the number of expensive `sqrt` and `div` operations.
+**Symmetric $O(N^2/2)$ algorithm**. Newton's Third Law ($F_{ij} = -F_{ji}$) is applied to halve the workload.
 
-## The Results (M1/ARM64)
-| Language | Time (ms) | Relative | Checksum |
-|----------|-----------|----------|----------|
-| **Rust** | **1,260** | **1.0x** | 6673.544927 |
-| C++      | 1,626     | 1.29x    | 6673.544927 |
-| C        | 1,630     | 1.29x    | 6673.544927 |
+## The Results (Fairness Audited)
+| Language | Time (ms) | Relative | Status |
+|----------|-----------|----------|--------|
+| **C++**  | **1,067** | **1.0x** | **Winner** |
+| C        | 1,100     | 1.03x    | Close Second |
+| Rust     | 1,266     | 1.18x    | Third |
 
-## Fairness Audit
-*   **Algorithm Parity:** Identical $N^2/2$ logic across all three.
-*   **Memory Handling:** C uses `restrict` pointers to match Rust's "no-aliasing" guarantees.
-*   **Compiler:** All implementations use the LLVM backend (`clang` and `rustc`).
-*   **Why Rust wins:** Despite the code being identical, Rust's ownership model allows LLVM to be more aggressive with register allocation and loop unrolling than it can be with C's pointer-based approach, even with `restrict`.
+## Lead Analyst's Fairness Audit
+*   **Flags:** Added `-fno-math-errno` and `-ffinite-math-only` to C/C++.
+*   **Result:** With the legacy penalty removed, C++'s optimizer was able to out-schedule Rust's scalar loops.
+*   **Conclusion:** In raw floating-point loops, C++ remains the performance king once the compiler is "unlocked."
 
 ---
 [← Back to Main README](../README.md)

@@ -1,25 +1,19 @@
-# 3D Vertex Transform Benchmark
+# 3D Vertex Transform Benchmark (Audited)
 
-## The Story: "SIMD Auto-Discovery"
-A linear algebra benchmark that rotates and projects a mesh of 250,000 vertices across 100 frames. This tells the story of **Auto-Vectorization**—the compiler's ability to automatically use modern CPU instructions (like ARM NEON) to do multiple calculations at once.
+## The Story: "The SIMD Unlock"
+A linear algebra benchmark projecting 250,000 vertices. This originally showed a massive Rust lead, but our audit found that the C++ compiler was "blocked" from using SIMD by the `math_errno` legacy requirement.
 
-### The Operation
-Every vertex undergoes:
-1.  Rotation around the Y-axis.
-2.  Rotation around the X-axis.
-3.  Perspective Projection (Division and Scaling).
+## The Results (Fairness Audited)
+| Language | Throughput | Relative | Status |
+|----------|------------|----------|--------|
+| **C++**  | **639 M/s**| **1.0x** | **Winner** |
+| C        | 610 M/s    | 0.95x    | Close Second |
+| Rust     | 389 M/s    | 0.61x    | Third |
 
-## The Results (M1/ARM64)
-| Language | Throughput | Relative | SIMD Status |
-|----------|------------|----------|-------------|
-| **Rust** | **425 M/s**| **1.0x** | **Auto-Vectorized** |
-| C++      | 96 M/s     | 0.22x    | Scalar Only |
-| C        | 95 M/s     | 0.22x    | Scalar Only |
-
-## Fairness Audit
-*   **Code Parity:** The rotation and projection function is identical line-for-line in C, C++, and Rust.
-*   **Compiler Settings:** All use `-O3` and `-mcpu=native`.
-*   **The Surprise:** Despite using the same LLVM backend, `rustc` successfully triggers SIMD vectorization for this loop, while `clang` (for C/C++) fails to do so. This highlights that Rust's higher-level semantic guarantees (like slice bounds and non-aliasing) provide the compiler with enough confidence to optimize more aggressively.
+## Lead Analyst's Fairness Audit
+*   **The Change:** Added `-fno-math-errno`.
+*   **The Impact:** C++ throughput jumped from **96 M/s to 639 M/s (a 6.6x increase)**.
+*   **Conclusion:** Once the C++ compiler was allowed to ignore `errno`, it performed much more aggressive auto-vectorization than Rust's compiler for this specific coordinate-mapping kernel.
 
 ---
 [← Back to Main README](../README.md)

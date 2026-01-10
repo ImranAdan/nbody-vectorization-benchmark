@@ -2,5 +2,5 @@ FROM ubuntu:22.04
 RUN apt-get update && apt-get install -y clang lld binutils && rm -rf /var/lib/apt/lists/*
 WORKDIR /bench
 COPY bench.c sha256.c sha256.h ./
-RUN clang -O3 -flto -mcpu=native -fuse-ld=lld bench.c sha256.c -o bench
+RUN clang -O3 -flto -mcpu=native -fuse-ld=lld -fno-math-errno -ffinite-math-only bench.c sha256.c -o bench
 CMD ["./bench"]
