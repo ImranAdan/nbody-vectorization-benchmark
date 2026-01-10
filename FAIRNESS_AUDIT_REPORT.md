@@ -394,6 +394,7 @@ Benchmarks re-run on 2026-01-10 after applying fairness corrections.
 | **SHA-256** | 1.84 MH/s | 1.78 MH/s | **2.44 MH/s** | Rust | MATCH |
 | **3D Vertex** | **650 M/s** | 631 M/s | 404 M/s | C | N/A |
 | **Kernel Pipe** | 2.03 GB/s | **2.11 GB/s** | 1.76 GB/s | C++ | MATCH |
+| **Lock-Free Queue** | **30.4M ops/s** | 25.9M ops/s | 15.7M ops/s | C | MATCH |
 
 ### Detailed Results
 
@@ -442,6 +443,15 @@ pipe-rust       4770.355     5949.773     1.763       00
 ```
 **CRITICAL:** All checksums now MATCH (00). C++ wins at syscall-heavy workloads.
 
+#### 6. Lock-Free Queue (MPMC Contention)
+```
+Language        min_ms       mean_ms      ops/sec         Status
+queue-c         114.005      132.980      30,415,074      OK  ← WINNER
+queue-cpp       118.624      165.194      25,946,800      OK
+queue-rust      184.245      272.838      15,740,651      OK
+```
+**Analysis:** After standardizing alignment (64-byte boundaries) and adding architecture-appropriate PAUSE instructions (`isb` on ARM), C takes the lead. The simple C implementation has the lowest overhead under high contention. Rust's `Arc` and higher-level abstractions show some overhead here.
+
 ---
 
 ## AREAS FOR IMPROVEMENT
@@ -477,6 +487,14 @@ pipe-rust       4770.355     5949.773     1.763       00
 - Pre-allocate buffer once and reuse
 - Consider `std::io::copy` for zero-copy transfers
 
+### 5. Lock-Free Queue Rust - 48% Slower Than C
+**Issue:** High contention overhead and Arc/Atomic abstraction costs.
+
+**Potential Fixes:**
+- Use raw pointers instead of `Arc` for the shared queue (unsafe).
+- Investigate if `isb` (spin_loop) is too aggressive or not enough on ARM for Rust.
+- Compare with `crossbeam-queue` for a more optimized baseline.
+
 ---
 
 ## REVISED CONCLUSIONS
@@ -489,6 +507,7 @@ pipe-rust       4770.355     5949.773     1.763       00
 | Bitwise/Crypto | **Rust** | +32% over C |
 | SIMD Math | C | +61% over Rust |
 | Syscall I/O | C++ | +20% over Rust |
+| **MPMC Contention** | **C** | +17% over C++ |
 
 ### Key Findings
 

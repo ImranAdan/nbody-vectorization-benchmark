@@ -1,0 +1,12 @@
+[package]
+name = "lockfree-queue-bench"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+# No external dependencies - pure std library for fairness
+
+[profile.release]
+opt-level = 3
+lto = "fat"
+codegen-units = 1

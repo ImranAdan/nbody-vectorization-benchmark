@@ -1,0 +1,14 @@
+FROM ubuntu:22.04 as builder
+RUN apt-get update && apt-get install -y curl gcc && \
+    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+ENV PATH="/root/.cargo/bin:${PATH}"
+WORKDIR /bench
+COPY Cargo.toml .
+COPY src ./src
+ENV RUSTFLAGS="-C target-cpu=native"
+RUN cargo build --release
+
+FROM ubuntu:22.04
+WORKDIR /bench
+COPY --from=builder /bench/target/release/lockfree-queue-bench ./bench
+CMD ["./bench"]
